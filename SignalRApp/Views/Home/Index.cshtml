@@ -1,24 +1,114 @@
-﻿<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-        a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-        is an ideal platform for building RESTful applications on the .NET Framework.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
+﻿@{
+    Layout = null;
+}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Simple Chat</title>
+    <style type="text/css">
+        .container {
+            background-color: #99CCFF;
+            border: thick solid #808080;
+            padding: 20px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="connectionId"></h2>
+        <input type="text" id="message" />
+        <select id="users"></select>
+        <input type="button" id="sendmessage" value="Send" />
+        <input type="hidden" id="displayname" />
+        <ul id="discussion"></ul>
     </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301871">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-    </div>
-</div>
+    
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.2.2.js"></script>
+    <script src="~/signalr/hubs"></script>
+
+    <!--Add script to update the page and send messages.-->
+    <script type="text/javascript">
+        $(function () {
+            // Declare a proxy to reference the hub.
+            var chat = $.connection.chatHub;
+            // Create a function that the hub can call to broadcast messages.
+            chat.client.broadcastMessage = function (name, message) {
+                // Html encode display name and message.
+                var encodedName = $('<div />').text(name).html();
+                var encodedMsg = $('<div />').text(message).html();
+                // Add the message to the page.
+                $('#discussion').append('<li><strong>' + encodedName
+                    + '</strong>:&nbsp;&nbsp;' + encodedMsg + '</li>');
+            };
+
+
+            var userName = prompt('Enter your name:', '');
+
+            // Get the user name and store it to prepend to messages.
+            $('#displayname').val(userName);
+            // Set initial focus to message input box.
+            $('#message').focus();
+            // Start the connection.
+
+            chat.client.alert = function (from,message) {
+                alert(from + ' : ' + message);
+            }
+
+            function getConnectionId() {
+                return $.connection.chatHub.connection.id;
+            }
+
+            chat.client.refreshUsers = function (users) {
+                var selected = $("#users").val();
+
+                console.log('refreshUsers', Date.now(), users);
+                $("#users option").remove();
+
+                $("<option>").text("-- ALL --").val("").appendTo("#users");
+
+                users.forEach(function (user) {
+                    $("<option>").text(user).val(user).appendTo("#users");
+                })
+
+                $("#users").val(selected);
+            }
+
+            // https://docs.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/hubs-api-guide-javascript-client#how-to-configure-the-connection
+            // Set a query string value before calling the start method (with the generated proxy)
+            $.connection.hub.qs = { 'userName': userName };
+            $.connection.hub.logging = true;
+
+            $.connection.hub.start().done(function () {
+
+                $("#connectionId").text(userName + ' : ' + $.connection.chatHub.connection.id);
+
+                $('#sendmessage').click(function () {
+
+                    var message = $('#message').val().trim();
+
+                    if (message.length == 0) return;
+
+                    // Call the Send method on the hub.
+                    var selected = $("#users").val();
+
+                    if (selected == "") {
+                        chat.server.send($('#displayname').val(), $('#message').val());
+                    }
+                    else {
+                        chat.server.sendPrivate(selected, $('#message').val());
+                    }                   
+
+                    // Clear text box and reset focus for next comment.
+                    $('#message').val('').focus();
+                });
+            });
+        });
+
+
+    </script>
+</body>
+</html>

@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28307.779
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRApp", "SignalRApp\SignalRApp.csproj", "{D6E3D6DD-13CF-4CFC-B129-6A9FDF452A49}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3787DF61-721A-4A2C-9CD9-7C923735C4A4}"
+	ProjectSection(SolutionItems) = preProject
+		Docs\ASP.NET SignalR Hubs API Guide - JavaScript Client _ Microsoft Docs (1).html = Docs\ASP.NET SignalR Hubs API Guide - JavaScript Client _ Microsoft Docs (1).html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
