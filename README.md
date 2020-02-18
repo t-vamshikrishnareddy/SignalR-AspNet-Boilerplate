@@ -1,4 +1,4 @@
-# SignalR Asp.Net 2020 fév 17
+# SignalR AspNet Boilerplate
 
 
 ## Javascript api client
