@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
-using System.Data.SqlClient;
+
 
 namespace SignalRApp.Hubs
 {
