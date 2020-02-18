@@ -70,9 +70,12 @@
 
                 $("<option>").text("-- ALL --").val("").appendTo("#users");
 
-                users.forEach(function (user) {
-                    $("<option>").text(user).val(user).appendTo("#users");
-                })
+                for (var k in users) {
+                    $("<option>").text(users[k]).val(k).appendTo("#users");
+                }
+                //users.forEach(function (user) {
+                //    $("<option>").text(user).val(user).appendTo("#users");
+                //})
 
                 $("#users").val(selected);
             }

@@ -11,11 +11,11 @@ namespace SignalRApp.Hubs
 
     public class ChatHub : Hub
     {
-        static readonly ConcurrentDictionary<string, string> UserConnectionsStore = new ConcurrentDictionary<string, string>();
+        static readonly ConcurrentDictionary<string, string> Users = new ConcurrentDictionary<string, string>();
 
-        static readonly Dictionary<string, string> Users = new Dictionary<string, string>();
+        //static readonly Dictionary<string, string> Users = new Dictionary<string, string>();
 
-        public override Task OnConnected()
+        void ConnectOrReconnect()            
         {
             // traitement perso
             var connectionId = Context.ConnectionId;
@@ -24,17 +24,29 @@ namespace SignalRApp.Hubs
                 .Select(q => q.Value)
                 .FirstOrDefault();
 
-            //UserConnectionsStore.AddOrUpdate(connectionId,userName, (key, value) => value);
 
-            lock (Users)
-            {
-                Users.Add(connectionId, userName);
-            }
+            Users.AddOrUpdate(connectionId, userName, (key, value) => value = userName);
 
-            Clients.All.refreshUsers(Users.Select(u => u.Value).ToList());
+            RefreshUsers();
+        }
 
-            // return
+        void RefreshUsers()
+        {
+            Clients.All.refreshUsers(Users);
+        }
+
+        public override Task OnConnected()
+        {
+            ConnectOrReconnect();
+
             return base.OnConnected();
+        }
+
+        public override Task OnReconnected()
+        {
+            ConnectOrReconnect();
+
+            return base.OnReconnected();
         }
 
         public override Task OnDisconnected(bool b)
@@ -42,14 +54,12 @@ namespace SignalRApp.Hubs
             // traitement perso
             var connectionId = Context.ConnectionId;
 
-            lock (Users)
-            {
-                Users.Remove(connectionId);
-            }
+            string value;
 
-            Clients.All.refreshUsers(Users.Select(u => u.Value).ToList());
+            Users.TryRemove(connectionId,out value);
 
-            // return
+            RefreshUsers();
+
             return base.OnDisconnected(b);
         }
 
@@ -59,18 +69,12 @@ namespace SignalRApp.Hubs
             Clients.All.broadcastMessage(name, message);
         }
 
-        public void SendPrivate(string userName,string message)
-        {
-            string from = Context.ConnectionId;
-            string connectionId = "";
+        public void SendPrivate(string destConnectId,string message)
+        {          
 
-            lock (Users)
-            {
-                from = Users.Where(u => u.Key == from).Select(u => u.Value).FirstOrDefault();
-                connectionId = Users.Where(u => u.Value.ToLower() == userName.ToLower()).Select(u => u.Key).FirstOrDefault();
-            }
+            Users.TryGetValue(Context.ConnectionId, out string from);
 
-            Clients.Client(connectionId).broadcastMessage(from,message);
+            Clients.Client(destConnectId).broadcastMessage(from,message);
         }
 
     }
