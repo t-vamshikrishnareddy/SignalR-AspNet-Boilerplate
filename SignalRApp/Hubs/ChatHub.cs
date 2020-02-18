@@ -13,19 +13,15 @@ namespace SignalRApp.Hubs
     {
         static readonly ConcurrentDictionary<string, string> Users = new ConcurrentDictionary<string, string>();
 
-        //static readonly Dictionary<string, string> Users = new Dictionary<string, string>();
-
         void ConnectOrReconnect()            
         {
-            // traitement perso
-            var connectionId = Context.ConnectionId;
             var userName = Context.QueryString
                 .Where(q => q.Key.ToLower() == "username")
                 .Select(q => q.Value)
                 .FirstOrDefault();
 
 
-            Users.AddOrUpdate(connectionId, userName, (key, value) => value = userName);
+            Users.AddOrUpdate(Context.ConnectionId, userName, (key, value) => value = userName);
 
             RefreshUsers();
         }
@@ -51,12 +47,8 @@ namespace SignalRApp.Hubs
 
         public override Task OnDisconnected(bool b)
         {
-            // traitement perso
-            var connectionId = Context.ConnectionId;
 
-            string value;
-
-            Users.TryRemove(connectionId,out value);
+            Users.TryRemove(Context.ConnectionId, out string value);
 
             RefreshUsers();
 
