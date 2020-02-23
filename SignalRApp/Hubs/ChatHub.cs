@@ -13,11 +13,7 @@ namespace SignalRApp.Hubs
 
         void ConnectOrReconnect()            
         {
-            var userName = Context.QueryString
-                .Where(q => q.Key.ToLower() == "username")
-                .Select(q => q.Value)
-                .FirstOrDefault();
-
+            var userName = Context.QueryString["username"];
 
             Users.AddOrUpdate(Context.ConnectionId, userName, (key, value) => value = userName);
 
